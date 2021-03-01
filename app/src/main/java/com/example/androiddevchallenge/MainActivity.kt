@@ -15,14 +15,30 @@
  */
 package com.example.androiddevchallenge
 
+import android.app.Activity
 import android.os.Bundle
+import androidx.activity.OnBackPressedCallback
+import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Surface
-import androidx.compose.material.Text
+import androidx.compose.foundation.*
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import com.example.androiddevchallenge.ui.theme.MyTheme
 
 class MainActivity : AppCompatActivity() {
@@ -39,10 +55,51 @@ class MainActivity : AppCompatActivity() {
 // Start building your app here!
 @Composable
 fun MyApp() {
+
+    var selectedDog by remember { mutableStateOf<Dog?>(null) }
+
+    val context = LocalContext.current
+    val backDispatcher = LocalOnBackPressedDispatcherOwner.current
+    val backCallback = remember {
+        object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                if (selectedDog != null) {
+                    selectedDog = null
+                } else {
+                    (context as? Activity)?.finish()
+                }
+            }
+        }
+    }
+
+    DisposableEffect(key1 = backDispatcher) {
+        backDispatcher.onBackPressedDispatcher.addCallback(backCallback)
+        onDispose {
+            backCallback.remove()
+        }
+    }
+
     Surface(color = MaterialTheme.colors.background) {
-        Text(text = "Ready... Set... GO!")
+       selectedDog?.let { localDog ->
+            DogDetails(dog = localDog)
+        } ?: run {
+            Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+                Spacer(modifier = Modifier.size(16.dp))
+                DogPool.Dogs.forEach {
+                    Box(Modifier.padding(8.dp)) {
+                        DogView(
+                            dog = it,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { selectedDog = it }
+                        )
+                    }
+                }
+            }
+        }
     }
 }
+
 
 @Preview("Light Theme", widthDp = 360, heightDp = 640)
 @Composable
@@ -52,10 +109,46 @@ fun LightPreview() {
     }
 }
 
-@Preview("Dark Theme", widthDp = 360, heightDp = 640)
 @Composable
-fun DarkPreview() {
+fun DarkPreview(function: () -> Unit) {
     MyTheme(darkTheme = true) {
         MyApp()
     }
 }
+
+@Composable
+fun DogView(dog: Dog, modifier: Modifier = Modifier) {
+    Card(modifier, shape = RoundedCornerShape(26.dp)) {
+        Box {
+            Image(
+                painterResource(dog.avatar),
+                null,
+                modifier = Modifier.fillMaxWidth(),
+                contentScale = ContentScale.FillWidth
+            )
+            Box(
+                modifier = Modifier
+                    .align(Alignment.BottomStart)
+                    .background(
+                        Brush.verticalGradient(
+                            listOf(
+                                Color.Transparent,
+                                MaterialTheme.colors.onSurface
+                            )
+                        )
+                    )
+                    .fillMaxWidth()
+                    .padding(26.dp)
+            ) {
+                Text(
+                    text = dog.name,
+                    style = MaterialTheme.typography.h5,
+                    color = MaterialTheme.colors.surface
+                )
+            }
+        }
+    }
+}
+
+
+
