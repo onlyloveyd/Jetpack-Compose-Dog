@@ -30,14 +30,7 @@ object DogPool {
     )
 }
 
-fun getRandomString(length: Int): String {
-    val allowedChars = "ABCDEFGHIJKLMNOPQRSTUVWXTZabcdefghiklmnopqrstuvwxyz"
-    return (1..length)
-        .map { allowedChars.random() }
-        .joinToString("")
-}
-
-val avatars = listOf<Int>(
+val avatars = listOf(
     R.drawable.dog_one,
     R.drawable.dog_two,
     R.drawable.dog_three,
@@ -48,4 +41,11 @@ val avatars = listOf<Int>(
 
 fun getRandomAvatar(): Int {
     return avatars[Random.nextInt(0, 5)]
+}
+
+fun getRandomString(length: Int): String {
+    val allowedChars = "ABCDEFGHIJKLMNOPQRSTUVWXTZabcdefghiklmnopqrstuvwxyz"
+    return (1..length)
+        .map { allowedChars.random() }
+        .joinToString("")
 }
